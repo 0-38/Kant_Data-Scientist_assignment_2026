@@ -53,29 +53,7 @@
 
 -- [코드 작성란]
 
-/*
-1. 첫 번째 CTE customer_totals를 작성하세요.
-   - orders와 order_items를 order_id 기준으로 JOIN
-   - customer_id별 총 구매금액 계산
-   - 총 구매금액 컬럼명은 total_amount
-   
-2. 두 번째 CTE high_value_customers를 작성하세요.
-   - customer_totals에서 total_amount가 50,000 이상인 고객만 선택
-         
-3. high_value_customers와 customers를 customer_id 기준으로 JOIN하세요.
-
-4. 도시별로 다음 값을 계산하세요.
-   - 우수 고객 수: vip_customer_count
-   - 우수 고객 총 구매금액: vip_total_amount
-   
-5. vip_total_amount가 높은 순서대로 정렬하세요.
-
-6. 작성한 전체 CTE 쿼리에 EXPLAIN을 적용하여 실행계획을 확인하세요.
-
-7. 실행계획에서 CTE가 본문에 인라인된 형태인지,
-   별도의 CTE Scan이 나타나는지 확인하세요.            
-*/
-
+-- # 1 ~ 6
 EXPLAIN 
 WITH customer_totals AS (
 	SELECT o.customer_id, SUM(oi.qty * oi.price) AS total_amount
