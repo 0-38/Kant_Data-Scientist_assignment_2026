@@ -241,17 +241,46 @@ ORDER BY customer_group ;
 -- [코드 작성란]
 
 
+-- # 1 ~ 9
+WITH daily_sales_summary AS (
+SELECT o.order_date, 
+    sum(oi.qty * oi.price) AS daily_sales
+FROM orders o 
+JOIN order_items oi 
+    ON oi.order_id = o.order_id
+GROUP BY o.order_date
+), 
+sales_compare AS (
+SELECT order_date, daily_sales,
+        sum(daily_sales) OVER (ORDER BY order_date) AS running_total,
+        lag(daily_sales) OVER (ORDER BY order_date) AS prev_day_sales
+FROM daily_sales_summary
+),
+sales_result AS (
+SELECT order_date, daily_sales, prev_day_sales,
+        daily_sales - prev_day_sales AS day_over_day_diff,
+        round((daily_sales - prev_day_sales) * 100.0 / NULLIF(prev_day_sales, 0),2) AS day_over_day_pct
+FROM sales_compare
+)
+SELECT order_date, day_over_day_pct
+FROM sales_result
+WHERE day_over_day_pct < 0
+ORDER BY order_date ASC ;
 
 
-/*
-============================================================
-실습 마무리
-============================================================
+--10. 다음 질문에 답하세요.
+--    Q1. 첫 번째 날짜의 증감률이 NULL이 되는 이유는 무엇인가요?
+        -- 1월 1일보다 앞선 날짜는 없기 때문에 전일 매출이 NUll로 처리된다.
+        -- 따라서 전일 매출이 NULL이기 떄문에 증감률도 NULL로 처리된다.
 
-아래 내용을 한 문단으로 정리하세요.
+--    Q2. NULLIF(prev_day_sales, 0)를 사용하는 이유는 무엇인가요?
+        -- 전일 매출이 0일 경우 0으로 나누는 오류가 발생하는 것을 방지하기 위해 사용한다.
+        -- prev_day_sales가 0이면 NULL로 변환하여 계산 결과를 NULL로 처리한다.
 
-1. 누적합과 이동평균의 계산 범위는 어떻게 다른가요?
-2. LAG와 LEAD는 각각 어떤 행을 참조하나요?
-3. 전일 대비 증감률 계산에서 NULLIF가 필요한 이유는 무엇인가요?
-4. 윈도우 함수 결과를 비즈니스 지표로 해석할 때 무엇을 주의해야 하나요?
-*/
+--    Q3. day_over_day_pct가 음수라는 것은 비즈니스적으로 무엇을 의미하나요?
+        -- 전일 매출보다 감소했다는 것을 의미한다.
+
+--    Q4. 하루의 감소만으로 매출 추세가 악화되었다고 단정하기 어려운 이유는 무엇인가요?
+        -- 하루의 매출은 일시적인 요인(요일, 이벤트 날씨 등)의 영향을 받을 수 있기 때문이다.
+        -- 따라서 여러 날짜의 매출 흐름을 함께 확인해야 전체적인 매출 추세를 판단할 수 있다.
+
